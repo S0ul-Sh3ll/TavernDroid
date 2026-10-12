@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="settings"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_settings">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.taverndroid"
+            android:targetClass="io.github.taverndroid.MainActivity">
+            <extra android:name="open" android:value="settings" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="log"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_log">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.taverndroid"
+            android:targetClass="io.github.taverndroid.MainActivity">
+            <extra android:name="open" android:value="log" />
+        </intent>
+    </shortcut>
+</shortcuts>

@@ -1,0 +1,40 @@
+--- a/public/script.js
++++ b/public/script.js
+@@ -9951,7 +9951,24 @@
+  * @param {number} [params.forceSwipeId] The target swipe_id. When out of range, it will be looped or clamped.
+  * @param {number} [params.forceDuration] Overwrites the default swipe duration.
+  */
+-export async function swipe(event, direction, { source, repeated, message = chat[chat.length - 1], forceMesId, forceSwipeId, forceDuration } = {}) {
++export async function swipe(event, direction, options = {}) {
++    // Only the call that takes the swipe lock may release it (a concurrent call returns early without it).
++    const ownsLock = swipeState === SWIPE_STATE.NONE;
++    try {
++        return await swipeUnguarded(event, direction, options);
++    } finally {
++        // If any step throws (e.g. the message was deleted or regenerated while the swipe was still
++        // animating), endSwipe() is never reached and swipeState would stay SWIPING. sendTextareaMessage()
++        // then silently ignores every send until the page is reloaded.
++        if (ownsLock && swipeState === SWIPE_STATE.SWIPING) {
++            swipeState = SWIPE_STATE.NONE;
++            delete document.body.dataset.swiping;
++            showSwipeButtons();
++        }
++    }
++}
++
++async function swipeUnguarded(event, direction, { source, repeated, message = chat[chat.length - 1], forceMesId, forceSwipeId, forceDuration } = {}) {
+     if (chat.length === 0) {
+         console.warn('Swipe was called on an empty chat.');
+         return;
+@@ -10048,6 +10065,11 @@
+             console.warn(`Swipe failed, Swiping back. ${error}`);
+         }
+ 
++        // The message may be gone by now (deleted or regenerated while the swipe was finishing).
++        if (!chat[mesId]) {
++            return;
++        }
++
+         //Clamp Id between swipes.
+         let clampedId = clamp(chat[mesId].swipe_id, 0, Math.max(0, chat[mesId].swipes.length - 1));
+ 
