@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">TavernDroid</string>
-    <string name="shortcut_settings">App settings</string>
-    <string name="shortcut_log">Server log</string>
-    <string name="source_url">https://github.com/taverndroid/taverndroid</string>
-    <string name="license_notice">TavernDroid is free software under the GNU AGPL-3.0. It runs SillyTavern (AGPL-3.0, with the small bug fixes listed in its source repository) on Node.js (MIT) and git (GPL-2.0) built by the Termux project. Not affiliated with the SillyTavern team.</string>
-</resources>
