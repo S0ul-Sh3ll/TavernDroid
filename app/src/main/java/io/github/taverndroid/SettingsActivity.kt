@@ -140,6 +140,20 @@ class SettingsActivity : LockedActivity() {
         switch("Show reply text in notifications", "Off: notifications only say who replied, so chats stay behind the PIN.",
             { prefs.notifyReplyText }) { prefs.notifyReplyText = it }
 
+        section("Background activity")
+        val bgStatus = text("", 14f, Color.rgb(0xdd, 0xdd, 0xdd))
+        fun showBg() {
+            bgStatus.text = if (Background.isUnrestricted(this)) "Battery: unrestricted ✓ (replies keep generating in the background)"
+            else "Battery: optimized. Some phones (vivo/iQOO, OPPO, Xiaomi…) pause replies while the app is in the background."
+        }
+        showBg()
+        bgRefresh = ::showBg
+        row(
+            button("Allow unrestricted") { Background.requestUnrestricted(this) },
+            button("App system settings") { Background.openAppSettings(this) },
+        )
+        hint("On vivo/iQOO also check App system settings → Battery → \"Background power consumption\" → Allow.")
+
         section("Behaviour")
         switch("Keep running in background", "Keep the server alive after the app is swiped away from recents.",
             { prefs.keepRunning }) { prefs.keepRunning = it }
@@ -208,6 +222,12 @@ class SettingsActivity : LockedActivity() {
         seconds < 60 -> "$seconds seconds of inactivity"
         seconds < 3600 -> "${seconds / 60} minute${if (seconds >= 120) "s" else ""} of inactivity"
         else -> "${seconds / 3600} hour${if (seconds >= 7200) "s" else ""} of inactivity"
+    }
+
+    private var bgRefresh: (() -> Unit)? = null
+
+    override fun onUnlockedResume() {
+        bgRefresh?.invoke()
     }
 
     private fun updateStatus(state: ServerController.State) {

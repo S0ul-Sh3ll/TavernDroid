@@ -92,6 +92,17 @@
         }
     }, true);
 
+    // ------------------------------------------------------------ page focus
+    // In a desktop browser a hidden tab reports document.hasFocus() === false. Android WebView keeps
+    // reporting true while the app is in the background or behind the lock screen. SillyTavern's Smooth
+    // Streaming types each received chunk out with small timers when the page "has focus", and Chrome
+    // throttles timers in hidden pages to 1/s (1/min after 5 minutes), so replies crawled or appeared to
+    // stop until the user came back. Report no focus while hidden, like a browser tab does.
+    const nativeHasFocus = Document.prototype.hasFocus;
+    Document.prototype.hasFocus = function () {
+        return !document.hidden && nativeHasFocus.call(this);
+    };
+
     // ------------------------------------------------------- speech synthesis
     // Android WebView has no Web Speech synthesis (no SpeechSynthesisUtterance), which SillyTavern's
     // "System" TTS provider uses. This implements the API on top of Android's TextToSpeech.

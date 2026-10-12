@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.taverndroid"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 4
+        versionName = "1.0.3"
         ndk { abiFilters += listOf("arm64-v8a") }
         val stBundle = rootProject.file("app/src/main/assets/st-bundle.version")
         buildConfigField("String", "ST_BUNDLE", "\"${if (stBundle.exists()) stBundle.readText().trim() else "missing"}\"")

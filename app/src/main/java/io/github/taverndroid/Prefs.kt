@@ -66,6 +66,10 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("notifyReplyText", false)
         set(value) = sp.edit { putBoolean("notifyReplyText", value) }
 
+    var askedBackground: Boolean
+        get() = sp.getBoolean("askedBackground", false)
+        set(value) = sp.edit { putBoolean("askedBackground", value) }
+
     var askedNotificationPermission: Boolean
         get() = sp.getBoolean("askedNotif", false)
         set(value) = sp.edit { putBoolean("askedNotif", value) }

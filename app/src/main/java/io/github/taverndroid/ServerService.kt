@@ -76,7 +76,10 @@ class ServerService : Service() {
         const val ACTION_STOP = "io.github.taverndroid.STOP"
         const val ACTION_RESTART = "io.github.taverndroid.RESTART"
         const val CHANNEL_SERVER = "server"
-        const val CHANNEL_REPLIES = "replies"
+        // Channel settings are fixed once created, so a changed default needs a new id. "replies" (1.0.0-1.0.2)
+        // was IMPORTANCE_DEFAULT without vibration: a quiet sound, no vibration, no pop-up.
+        const val CHANNEL_REPLIES = "replies_alert"
+        private val OLD_CHANNELS = listOf("replies")
         const val CHANNEL_FILES = "files"
         private const val NOTIFICATION_ID = 1
 
@@ -104,10 +107,12 @@ class ServerService : Service() {
                 }
             )
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_REPLIES, "Replies", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                NotificationChannel(CHANNEL_REPLIES, "Replies", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "A character replied while the app was in the background"
+                    enableVibration(true)
                 }
             )
+            OLD_CHANNELS.forEach { nm.deleteNotificationChannel(it) }
             nm.createNotificationChannel(
                 NotificationChannel(CHANNEL_FILES, "Saved files", NotificationManager.IMPORTANCE_LOW).apply {
                     description = "Exports and downloads saved to the Downloads folder"

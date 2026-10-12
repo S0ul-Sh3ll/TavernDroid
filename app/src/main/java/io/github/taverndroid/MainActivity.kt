@@ -175,6 +175,12 @@ class MainActivity : LockedActivity() {
         super.onResume()
         resumed = true
         applyWindowFlags()
+        // Some vendor freezers (vivo/iQOO, OPPO) thaw the app's main process on return but leave the WebView
+        // renderer frozen until it gets input, so a reply that paused in the background would only continue
+        // after a tap. Talking to the renderer right away (resume + a no-op script) thaws it.
+        webView.onResume()
+        webView.evaluateJavascript("void 0", null)
+        webView.postDelayed({ if (!isDestroyed) webView.evaluateJavascript("void 0", null) }, 500)
         WebView.setWebContentsDebuggingEnabled(prefs.webDebugging || BuildConfig.DEBUG)
     }
 
@@ -317,6 +323,15 @@ class MainActivity : LockedActivity() {
         if (progress != null) overlayProgress.progress = (progress * 1000).toInt()
         if (!done) setButtons()
         overlayLog.text = ServerController.log.tail(14).joinToString("\n")
+    }
+
+    /**
+     * By default WebView lowers its renderer process's priority when the app is not visible, which lets
+     * freezers pause the page mid-reply. While a reply is generating, keep it bound as important.
+     */
+    private fun keepRendererImportant(important: Boolean) {
+        if (Build.VERSION.SDK_INT < 26 || isDestroyed) return
+        webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, !important)
     }
 
     private fun revealPage() {
@@ -630,10 +645,19 @@ class MainActivity : LockedActivity() {
         fun openSettings() = runOnUiThread { this@MainActivity.openSettings() }
 
         @JavascriptInterface
-        fun generationStarted(@Suppress("UNUSED_PARAMETER") type: String) = Generation.started(applicationContext)
+        fun generationStarted(@Suppress("UNUSED_PARAMETER") type: String) {
+            Generation.started(applicationContext)
+            runOnUiThread {
+                keepRendererImportant(true)
+                Background.maybeAskOnce(this@MainActivity)
+            }
+        }
 
         @JavascriptInterface
-        fun generationEnded() = Generation.release()
+        fun generationEnded() {
+            Generation.release()
+            runOnUiThread { keepRendererImportant(false) }
+        }
 
         @JavascriptInterface
         fun replyReceived(name: String, text: String) = runOnUiThread { notifyReply(name, text) }
@@ -667,6 +691,9 @@ class MainActivity : LockedActivity() {
             .setContentTitle(name)
             .setContentIntent(open)
             .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // Android 7 (no channels): sound, vibration, pop-up
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .apply {
                 if (prefs.notifyReplyText) {
                     setContentText(TextUtils.ellipsize(text, android.text.TextPaint(), 2000f, TextUtils.TruncateAt.END))
@@ -676,8 +703,12 @@ class MainActivity : LockedActivity() {
                 }
             }
             .build()
+        // Remove the previous reply first: an identical update to a notification that is still shown ("New reply"
+        // again) counts as non-interruptive, so Android would replace it without sound or vibration.
+        val nm = NotificationManagerCompat.from(this)
+        nm.cancel(REPLY_NOTIFICATION_ID)
         @SuppressLint("MissingPermission")
-        fun post() = NotificationManagerCompat.from(this).notify(REPLY_NOTIFICATION_ID, n)
+        fun post() = nm.notify(REPLY_NOTIFICATION_ID, n)
         post()
     }
 

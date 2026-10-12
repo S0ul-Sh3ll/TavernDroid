@@ -84,6 +84,9 @@ The phone checks ran on an OPPO CPH2437 (Android 16, Dimensity 9000).
 | Out-of-memory kill of Node while large local models load left the user on an error screen | automatic restart with crash-loop protection |
 | Start on boot crashed on Android versions that refuse background starts at boot | caught; tap-to-start notification |
 | Terminal-title escape codes leaked into the server log | stripped |
+| On vivo/iQOO (and similar vendor ROMs) a reply paused while the app was in the background | one-time prompt for unrestricted battery use, *Background activity* settings, renderer kept important while generating |
+| With **Smooth Streaming** on, replies crawled or stopped while the app was in the background or behind the lock screen: WebView reports `document.hasFocus() === true` when hidden, so SillyTavern kept "typing" with timers that Chrome throttles in hidden pages | `hasFocus()` reports `false` while the page is hidden, like a browser tab (verified on an iQOO 12: whole reply received in the background) |
+| Reply notifications played a quiet sound with no vibration and no pop-up (normal-importance channel without vibration) | new high-importance **Replies** channel with vibration and pop-up (old channel removed); the previous reply notification is removed before posting, because an identical update ("New reply" again) is silent |
 
 ## Known limits
 
